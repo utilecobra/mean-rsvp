@@ -15,6 +15,15 @@ module.exports = function(app, config) {
     algorithm: 'RS256'
   });
 
+  const adminCheck = (req, res, next) => {
+    const roles = req.user[config.NAMESPACE] || [];
+    if (roles.indexOf('admin') > -1) {
+      next();
+    } else {
+      res.status(403).send({message: 'Not authorized for admin access'});
+    }
+  }
+
   app.get('/api/', (req, res) => {
     res.send('API works');
   });

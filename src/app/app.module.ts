@@ -8,13 +8,17 @@ import { HomeComponent } from './pages/home/home.component';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 
+import { AuthService } from './auth/auth.service';
+import { CallbackComponent } from './pages/callback/callback.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    CallbackComponent
   ],
   imports: [
     BrowserModule,
@@ -22,6 +26,7 @@ import { FooterComponent } from './footer/footer.component';
   ],
   providers: [
     Title,
+    AuthService,
   ],
   bootstrap: [AppComponent]
 })

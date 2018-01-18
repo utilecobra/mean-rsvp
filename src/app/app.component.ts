@@ -3,6 +3,8 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/operator/debounceTime';
 
+import { AuthService } from './auth/auth.service';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -13,7 +15,9 @@ export class AppComponent implements OnInit {
   minHeight: string;
   private _initWinHeight = 0;
 
-  constructor() {}
+  constructor(private auth: AuthService) {
+    auth.handleAuth();
+  }
 
   ngOnInit() {
     Observable.fromEvent(window, 'resize')
