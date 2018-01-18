@@ -1,7 +1,9 @@
 const jwt = require('express-jwt');
 const jwks = require('jwks-rsa');
 
-// Auth middleware
+const Event = require('./models/Event');
+const Rsvp = require('./models/Rsvp');
+
 module.exports = function(app, config) {
   const jwtCheck = jwt({
     secret: jwks.expressJwtSecret({
