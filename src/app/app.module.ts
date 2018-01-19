@@ -2,6 +2,7 @@ import { BrowserModule, Title } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 
@@ -15,6 +16,8 @@ import { CallbackComponent } from './pages/callback/callback.component';
 import { AuthService } from './auth/auth.service';
 import { ApiService } from './core/api.service';
 import { UtilsService } from './core/utils.service';
+import { FilterSortService } from './core/filter-sort.service';
+import { AdminComponent } from './pages/admin/admin.component';
 
 @NgModule({
   declarations: [
@@ -23,12 +26,14 @@ import { UtilsService } from './core/utils.service';
     HeaderComponent,
     FooterComponent,
     CallbackComponent,
-    LoadingComponent
+    LoadingComponent,
+    AdminComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
+    FormsModule,
   ],
   providers: [
     Title,
@@ -36,6 +41,7 @@ import { UtilsService } from './core/utils.service';
     ApiService,
     DatePipe,
     UtilsService,
+    FilterSortService,
   ],
   bootstrap: [AppComponent]
 })
