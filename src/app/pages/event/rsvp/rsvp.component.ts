@@ -25,6 +25,8 @@ export class RsvpComponent implements OnInit, OnDestroy {
   footerTense: string;
   showAllRsvps = false;
   showRsvpsText = 'View All RSVPs';
+  showEditForm: boolean;
+  editBtnText: string;
 
   constructor(
     public auth: AuthService,
@@ -35,6 +37,7 @@ export class RsvpComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.footerTense = !this.eventPast ? 'plan to attend this event.' : 'attended this event.';
     this._getRSVPs();
+    this.toggleEditForm(false);
   }
 
   private _getRSVPs() {
@@ -61,19 +64,41 @@ export class RsvpComponent implements OnInit, OnDestroy {
     this.showRsvpsText = this.showAllRsvps ? 'Hide RSVPs' : 'Show All RSVPs';
   }
 
-  private _updateRsvpState() {
-    // @TODO: We will add more functionality here later
-    this._setUserRsvpGetAttending();
+  toggleEditForm(setVal?: boolean) {
+    this.showEditForm = setVal !== undefined ? setVal : !this.showEditForm;
+    this.editBtnText = this.showEditForm ? 'Cancel Edit' : 'Edit My RSVP';
   }
 
-  private _setUserRsvpGetAttending() {
+  onSubmitRsvp(e) {
+    if (e.rsvp) {
+      this.userRsvp = e.rsvp;
+      this._updateRsvpState(true);
+      this.toggleEditForm(false);
+    }
+  }
+
+  private _updateRsvpState(changed?: boolean) {
+    const _initialUserRsvp = this.rsvps.filter(rsvp => {
+      return rsvp.userId === this.auth.userProfile.sub;
+    })[0];
+    if (!_initialUserRsvp && this.userRsvp && changed) {
+      this.rsvps.push(this.userRsvp);
+    }
+    this._setUserRsvpGetAttending(changed);
+  }
+
+  private _setUserRsvpGetAttending(changed?: boolean) {
     // Iterate over RSVPs to get/set user's RSVP
     // and get total number of attending guests
     let guests = 0;
     const rsvpArr = this.rsvps.map(rsvp => {
       // If user has an existing RSVP
       if (rsvp.userId === this.auth.userProfile.sub) {
-        this.userRsvp = rsvp;
+        if (changed) {
+          rsvp = this.userRsvp;
+        } else {
+          this.userRsvp = rsvp;
+        }
       }
       // Count total number of attendees
       // + additional guests

@@ -53,6 +53,24 @@ export class ApiService {
       .catch(this._handleError);
   }
 
+  // POST new RSVP
+  postRsvp$(rsvp: RsvpModel): Observable<RsvpModel> {
+    return this.http
+      .post(`${ENV.BASE_API}rsvp/new`, rsvp, {
+        headers: new HttpHeaders().set('Authorization', this._authHeader)
+      })
+      .catch(this._handleError);
+    }
+
+    // PUT an RSVP
+    editRsvp$(id: string, rsvp: RsvpModel): Observable<RsvpModel> {
+      return this.http
+      .put(`${ENV.BASE_API}rsvp/${id}`, rsvp, {
+        headers: new HttpHeaders().set('Authorization', this._authHeader)
+      })
+      .catch(this._handleError);
+  }
+
   private _handleError(err: HttpErrorResponse | any) {
     const errorMsg = err.message || 'Error: Unable to complete request.';
     if (err.message && err.message.indexOf('No JWT present') > -1) {
