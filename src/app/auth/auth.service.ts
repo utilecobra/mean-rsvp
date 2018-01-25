@@ -3,6 +3,11 @@ import { Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { AUTH_CONFIG } from './auth.config';
 import * as auth0 from 'auth0-js';
+import { Subscription } from 'rxjs/Subscription';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/timer';
+import 'rxjs/add/operator/mergeMap';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +23,7 @@ export class AuthService {
   loggedIn: boolean;
   loggedIn$ = new BehaviorSubject<boolean>(this.loggedIn);
   isAdmin: boolean;
+  refreshSub: Subscription;
 
   constructor(private router: Router) {
     const lsProfile = localStorage.getItem('profile');
@@ -26,6 +32,7 @@ export class AuthService {
       this.userProfile = JSON.parse(lsProfile);
       this.isAdmin = localStorage.getItem('isAdmin') === 'true';
       this.setLoggedIn(true);
+      this.scheduleRenewal();
     } else if (!this.tokenValid && lsProfile) {
       this.logout();
     }
@@ -87,16 +94,22 @@ export class AuthService {
     localStorage.removeItem('authRedirect');
   }
 
-  private _setSession(authResult, profile) {
+  private _setSession(authResult, profile?) {
     const expiresAt = JSON.stringify((authResult.expiresIn * 1000) + Date.now());
     localStorage.setItem('access_token', authResult.accessToken);
     localStorage.setItem('id_token', authResult.idToken);
     localStorage.setItem('expires_at', expiresAt);
-    localStorage.setItem('profile', JSON.stringify(profile));
-    this.userProfile = profile;
-    this.isAdmin = this._checkAdmin(profile);
-    localStorage.setItem('isAdmin', this.isAdmin.toString());
+
+    if (profile) {
+      localStorage.setItem('profile', JSON.stringify(profile));
+      this.userProfile = profile;
+      this.isAdmin = this._checkAdmin(profile);
+      localStorage.setItem('isAdmin', this.isAdmin.toString());
+    }
+
     this.setLoggedIn(true);
+
+    this.scheduleRenewal();
   }
 
   private _checkAdmin(profile) {
@@ -104,7 +117,7 @@ export class AuthService {
     return roles.indexOf('admin') > -1;
   }
 
-  logout() {
+  logout(noRedirect?: boolean) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('id_token');
     localStorage.removeItem('profile');
@@ -115,11 +128,65 @@ export class AuthService {
     this.userProfile = undefined;
     this.isAdmin = undefined;
     this.setLoggedIn(false);
-    this.router.navigate(['/']);
+
+    this.unscheduleRenewal();
+
+    if (noRedirect !== true) {
+      this.router.navigate(['/']);
+    }
   }
 
   get tokenValid(): boolean {
     const expiresAt = JSON.parse(localStorage.getItem('expires_at'));
     return Date.now() < expiresAt;
   }
+
+  renewToken() {
+    this._auth0.checkSession({},
+      (err, authResult) => {
+        if (authResult && authResult.accessToken) {
+          this._setSession(authResult);
+        } else if (err) {
+          console.warn(`Could not renew token: ${err.errorDescription}`);
+          // Log out without redirecting to clear auth data
+          this.logout(true);
+          // Log in again
+          this.login();
+        }
+      }
+    );
+  }
+
+  scheduleRenewal() {
+    // If user isn't authenticated, do nothing
+    if (!this.tokenValid) { return; }
+    // Unsubscribe from previous expiration observable
+    this.unscheduleRenewal();
+    // Create and subscribe to expiration observable
+    const expiresAt = JSON.parse(localStorage.getItem('expires_at'));
+    const expiresIn$ = Observable.of(expiresAt)
+      .mergeMap(
+        expires => {
+          const now = Date.now();
+          // Use timer to track delay until expiration
+          // to run the refresh at the proper time
+          return Observable.timer(Math.max(1, expires - now));
+        }
+      );
+
+    this.refreshSub = expiresIn$
+      .subscribe(
+        () => {
+          this.renewToken();
+          this.scheduleRenewal();
+        }
+      );
+  }
+
+  unscheduleRenewal() {
+    if (this.refreshSub) {
+      this.refreshSub.unsubscribe();
+    }
+  }
+
 }

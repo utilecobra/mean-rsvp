@@ -6,6 +6,7 @@ import { UtilsService } from './../../../core/utils.service';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs/Subscription';
 import { EventModel } from './../../../core/models/event.model';
+import { Subscribable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-update-event',
@@ -20,6 +21,8 @@ export class UpdateEventComponent implements OnInit, OnDestroy {
   loading: boolean;
   error: boolean;
   private _id: string;
+  tabSub: Subscription;
+  tab: string;
 
   constructor(
     private route: ActivatedRoute,
@@ -36,6 +39,11 @@ export class UpdateEventComponent implements OnInit, OnDestroy {
       .subscribe(params => {
         this._id = params['id'];
         this._getEvent();
+      });
+
+    this.tabSub = this.route.queryParams
+      .subscribe(queryParams => {
+        this.tab = queryParams['tab'] || 'edit';
       });
   }
 
@@ -60,6 +68,7 @@ export class UpdateEventComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.routeSub.unsubscribe();
     this.eventSub.unsubscribe();
+    this.tabSub.unsubscribe();
   }
 
 }

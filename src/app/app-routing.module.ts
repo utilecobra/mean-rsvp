@@ -11,6 +11,7 @@ import { AdminComponent } from './pages/admin/admin.component';
 import { EventComponent } from './pages/event/event.component';
 import { CreateEventComponent } from './pages/admin/create-event/create-event.component';
 import { UpdateEventComponent } from './pages/admin/update-event/update-event.component';
+import { MyRsvpsComponent } from './pages/my-rsvps/my-rsvps.component';
 
 const routes: Routes = [
   {
@@ -23,28 +24,22 @@ const routes: Routes = [
   },
   {
     path: 'admin',
+    loadChildren: './pages/admin/admin.module#AdminModule',
     canActivate: [
       AuthGuard,
       AdminGuard
     ],
-    children: [
-      {
-        path: '',
-        component: AdminComponent
-      },
-      {
-        path: 'event/new',
-        component: CreateEventComponent
-      },
-      {
-        path: 'event/update/:id',
-        component: UpdateEventComponent
-      },
-    ]
   },
   {
     path: 'event/:id',
-    component: EventComponent,
+    loadChildren: './pages/event/event.module#EventModule',
+    canActivate: [
+      AuthGuard
+    ]
+  },
+  {
+    path: 'my-rsvps',
+    component: MyRsvpsComponent,
     canActivate: [
       AuthGuard
     ]
